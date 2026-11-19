@@ -259,3 +259,45 @@ class RecordingService : Service() {
     stopForeground(STOP_FOREGROUND_REMOVE)
     stopSelf()
     }
+        private fun writeWavHeader(
+        file: RandomAccessFile?,
+        dataSize: Long
+    ) {
+        if (file == null) return
+
+        val byteRate = sampleRate * channelCount * bytesPerSample
+
+        file.writeBytes("RIFF")
+        writeInt(file, (dataSize + 36).toInt())
+        file.writeBytes("WAVE")
+        file.writeBytes("fmt ")
+        writeInt(file, 16)
+        writeShort(file, 1)
+        writeShort(file, channelCount)
+        writeInt(file, sampleRate)
+        writeInt(file, byteRate)
+        writeShort(file, channelCount * bytesPerSample)
+        writeShort(file, 16)
+        file.writeBytes("data")
+        writeInt(file, dataSize.toInt())
+    }
+
+    private fun writeInt(file: RandomAccessFile, value: Int) {
+        file.write(value and 0xff)
+        file.write((value shr 8) and 0xff)
+        file.write((value shr 16) and 0xff)
+        file.write((value shr 24) and 0xff)
+    }
+
+    private fun writeShort(file: RandomAccessFile, value: Int) {
+        file.write(value and 0xff)
+        file.write((value shr 8) and 0xff)
+    }
+
+    override fun onDestroy() {
+        if (recording || output != null) {
+            stopRecording()
+        }
+        super.onDestroy()
+    }
+}
