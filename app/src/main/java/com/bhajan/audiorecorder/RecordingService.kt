@@ -7,6 +7,7 @@ import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.*
 import android.content.pm.ServiceInfo
+import android.provider.MediaStore
 import java.io.File
 import java.io.RandomAccessFile
 import java.text.SimpleDateFormat
