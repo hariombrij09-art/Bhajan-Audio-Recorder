@@ -25,7 +25,11 @@
             </intent-filter>
 
         </activity>
-
+        
+        <service
+            android:name=".RecordingService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
     </application>
 
 </manifest>
