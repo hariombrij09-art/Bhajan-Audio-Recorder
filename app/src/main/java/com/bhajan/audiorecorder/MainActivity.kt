@@ -1,6 +1,6 @@
 package com.bhajan.audiorecorder
 
-import android.app.Activity
+import androidx.activity.ComponentActivity
 import android.content.Intent
 import android.media.projection.MediaProjectionManager
 import android.os.Bundle
@@ -13,7 +13,7 @@ import android.widget.*
 import android.graphics.Color
 import androidx.activity.result.contract.ActivityResultContracts
 
-class MainActivity : Activity() {
+class MainActivity : ComponentActivity() {
 
     private lateinit var projectionManager: MediaProjectionManager
 
