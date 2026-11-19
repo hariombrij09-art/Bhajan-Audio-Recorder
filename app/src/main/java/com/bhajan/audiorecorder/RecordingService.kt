@@ -9,6 +9,7 @@ import android.os.*
 import android.content.pm.ServiceInfo
 import android.provider.MediaStore
 import java.io.File
+import java.io.FileInputStream
 import java.io.RandomAccessFile
 import java.text.SimpleDateFormat
 import java.util.*
