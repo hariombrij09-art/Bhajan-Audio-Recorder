@@ -179,20 +179,15 @@ class RecordingService : Service() {
 
                 while (recording) {
 
-                    if (paused) {
-                        Thread.sleep(100)
-                        continue
-                    }
+                   val count = recorder?.read(
+                       buffer, 0, buffer.size
+                   ) ?: -1
 
-                    val count = recorder?.read(
-                        buffer, 0, buffer.size
-                    ) ?: -1
-
-                    if (count > 0) {
-                        output?.write(buffer, 0, count)
-                        totalBytes += count
-                    }
-                }
+                   if (count > 0 && !paused) {
+                       output?.write(buffer, 0, count)
+                       totalBytes += count
+                   }
+               }
             }
 
             recordingThread?.start()
