@@ -13,6 +13,7 @@ import java.io.FileInputStream
 import java.io.RandomAccessFile
 import java.text.SimpleDateFormat
 import java.util.*
+import android.net.Uri
 
 class RecordingService : Service() {
 
