@@ -204,72 +204,63 @@ class RecordingService : Service() {
     }
 
     private fun stopRecording() {
+    recording = false
 
-        recording = false
+    try {
+        recordingThread?.join(1000)
 
-        try {
-            recordingThread?.join(1000)
+        recorder?.stop()
+        recorder?.release()
+        recorder = null
 
-            recorder?.stop()
-            recorder?.release()
-            recorder = null
+        output?.seek(0)
+        writeWavHeader(output, totalBytes)
+        output?.close()
+        output = null
 
-            output?.seek(0)
-            writeWavHeader(output, totalBytes)
-            output?.close()
-            output = null
+        val tempFile = outputFile
 
-            projection?.stop()
-            projection = null
+        if (tempFile != null && tempFile.exists()) {
+            val values = ContentValues().apply {
+                put(MediaStore.Audio.Media.DISPLAY_NAME, tempFile.name)
+                put(MediaStore.Audio.Media.MIME_TYPE, "audio/wav")
+                put(
+                    MediaStore.Audio.Media.RELATIVE_PATH,
+                    Environment.DIRECTORY_MUSIC + "/Bhajan Audio Recorder"
+                )
+                put(MediaStore.Audio.Media.IS_PENDING, 1)
+            }
 
-        } catch (e: Exception) {
-            e.printStackTrace()
+            val uri = contentResolver.insert(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                values
+            )
+
+            if (uri != null) {
+                contentResolver.openOutputStream(uri)?.use { destination ->
+                    FileInputStream(tempFile).use { source ->
+                        source.copyTo(destination)
+                    }
+                }
+
+                val completedValues = ContentValues().apply {
+                    put(MediaStore.Audio.Media.IS_PENDING, 0)
+                }
+
+                contentResolver.update(uri, completedValues, null, null)
+                tempFile.delete()
+            }
         }
 
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
+        outputFile = null
+
+        projection?.stop()
+        projection = null
+
+    } catch (e: Exception) {
+        e.printStackTrace()
     }
 
-    private fun writeWavHeader(
-        file: RandomAccessFile?,
-        dataSize: Long
-    ) {
-
-        if (file == null) return
-
-        val byteRate = sampleRate * channelCount * bytesPerSample
-
-        file.writeBytes("RIFF")
-        writeInt(file, (dataSize + 36).toInt())
-        file.writeBytes("WAVE")
-        file.writeBytes("fmt ")
-        writeInt(file, 16)
-        writeShort(file, 1)
-        writeShort(file, channelCount)
-        writeInt(file, sampleRate)
-        writeInt(file, byteRate)
-        writeShort(file, channelCount * bytesPerSample)
-        writeShort(file, 16)
-        file.writeBytes("data")
-        writeInt(file, dataSize.toInt())
+    stopForeground(STOP_FOREGROUND_REMOVE)
+    stopSelf()
     }
-
-    private fun writeInt(file: RandomAccessFile, value: Int) {
-        file.write(value and 0xff)
-        file.write((value shr 8) and 0xff)
-        file.write((value shr 16) and 0xff)
-        file.write((value shr 24) and 0xff)
-    }
-
-    private fun writeShort(file: RandomAccessFile, value: Int) {
-        file.write(value and 0xff)
-        file.write((value shr 8) and 0xff)
-    }
-
-    override fun onDestroy() {
-        if (recording || output != null) {
-            stopRecording()
-        }
-        super.onDestroy()
-    }
-}
