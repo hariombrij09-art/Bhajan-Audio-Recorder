@@ -103,7 +103,7 @@ class MainActivity : ComponentActivity() {
         // Recording Control Panel
         val panel = LinearLayout(this)
         panel.orientation = LinearLayout.VERTICAL
-        panel.setPadding(8, 5, 8, 5)
+        panel.setPadding(4, 2, 4, 2)
         panel.setBackgroundColor(Color.rgb(240, 240, 240))
 
         status = TextView(this)
