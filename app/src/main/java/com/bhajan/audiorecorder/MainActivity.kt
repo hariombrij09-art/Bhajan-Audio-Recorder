@@ -140,8 +140,8 @@ class MainActivity : ComponentActivity() {
             status.text = "⏸ Recording Paused"
         }
 
-        row1.addView(record, LinearLayout.LayoutParams(0, 44, 1f))
-        row1.addView(pause, LinearLayout.LayoutParams(0, 44, 1f))
+        row1.addView(record, LinearLayout.LayoutParams(0, 52, 1f))
+        row1.addView(pause, LinearLayout.LayoutParams(0, 52, 1f))
 
         panel.addView(row1)
 
@@ -176,7 +176,7 @@ class MainActivity : ComponentActivity() {
             recordings,
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                40
+                48
             )
         )
 
