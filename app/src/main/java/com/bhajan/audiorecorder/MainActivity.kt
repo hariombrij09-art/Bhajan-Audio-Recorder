@@ -7,8 +7,12 @@ import android.os.Bundle
 import android.os.Build
 import android.Manifest
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.view.Gravity
+import android.view.View
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import android.webkit.WebChromeClient
+import android.webkit.CookieManager
 import android.widget.*
 import android.graphics.Color
 import androidx.activity.result.contract.ActivityResultContracts
@@ -16,6 +20,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 class MainActivity : ComponentActivity() {
 
     private lateinit var projectionManager: MediaProjectionManager
+    private lateinit var status: TextView
 
     private val permissionLauncher =
         registerForActivityResult(
@@ -56,11 +61,7 @@ class MainActivity : ComponentActivity() {
                     startService(intent)
                 }
 
-                Toast.makeText(
-                    this,
-                    "Recording Started",
-                    Toast.LENGTH_SHORT
-                ).show()
+                status.text = "● Recording Started"
             }
         }
 
@@ -71,37 +72,54 @@ class MainActivity : ComponentActivity() {
             getSystemService(MEDIA_PROJECTION_SERVICE)
                     as MediaProjectionManager
 
-        val layout = LinearLayout(this)
-        layout.orientation = LinearLayout.VERTICAL
-        layout.gravity = Gravity.CENTER
-        layout.setPadding(25, 25, 25, 25)
-        layout.setBackgroundColor(Color.WHITE)
+        val root = LinearLayout(this)
+        root.orientation = LinearLayout.VERTICAL
+        root.setBackgroundColor(Color.WHITE)
 
-        val title = TextView(this)
-        title.text = "Bhajan Audio Recorder"
-        title.textSize = 26f
-        title.setTextColor(Color.BLACK)
-        title.gravity = Gravity.CENTER
+        // YouTube WebView
+        val webView = WebView(this)
 
-        layout.addView(title)
+        webView.settings.javaScriptEnabled = true
+        webView.settings.domStorageEnabled = true
+        webView.settings.mediaPlaybackRequiresUserGesture = false
 
-        val youtube = Button(this)
-        youtube.text = "▶ Open YouTube"
+        CookieManager.getInstance()
+            .setAcceptThirdPartyCookies(webView, true)
 
-        youtube.setOnClickListener {
-            startActivity(
-                Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse("https://www.youtube.com")
-                )
+        webView.webViewClient = WebViewClient()
+        webView.webChromeClient = WebChromeClient()
+
+        webView.loadUrl("https://m.youtube.com")
+
+        root.addView(
+            webView,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                0,
+                1f
             )
-        }
+        )
 
-        layout.addView(youtube)
+        // Recording Control Panel
+        val panel = LinearLayout(this)
+        panel.orientation = LinearLayout.VERTICAL
+        panel.setPadding(8, 5, 8, 5)
+        panel.setBackgroundColor(Color.rgb(240, 240, 240))
+
+        status = TextView(this)
+        status.text = "● Ready to Record"
+        status.textSize = 15f
+        status.setTextColor(Color.BLACK)
+        status.gravity = Gravity.CENTER
+
+        panel.addView(status)
+
+        // First Row
+        val row1 = LinearLayout(this)
+        row1.orientation = LinearLayout.HORIZONTAL
 
         val record = Button(this)
         record.text = "🔴 RECORD"
-
         record.setOnClickListener {
             if (checkSelfPermission(
                     Manifest.permission.RECORD_AUDIO
@@ -115,41 +133,62 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        layout.addView(record)
-
         val pause = Button(this)
         pause.text = "⏸ PAUSE"
-
         pause.setOnClickListener {
             sendAction(RecordingService.ACTION_PAUSE)
+            status.text = "⏸ Recording Paused"
         }
 
-        layout.addView(pause)
+        row1.addView(record, LinearLayout.LayoutParams(0, 55, 1f))
+        row1.addView(pause, LinearLayout.LayoutParams(0, 55, 1f))
+
+        panel.addView(row1)
+
+        // Second Row
+        val row2 = LinearLayout(this)
+        row2.orientation = LinearLayout.HORIZONTAL
 
         val resume = Button(this)
         resume.text = "▶ RESUME"
-
         resume.setOnClickListener {
             sendAction(RecordingService.ACTION_RESUME)
+            status.text = "● Recording Resumed"
         }
-
-        layout.addView(resume)
 
         val stop = Button(this)
         stop.text = "⏹ STOP"
-
         stop.setOnClickListener {
             sendAction(RecordingService.ACTION_STOP)
+            status.text = "■ Recording Stopped"
         }
 
-        layout.addView(stop)
+        row2.addView(resume, LinearLayout.LayoutParams(0, 55, 1f))
+        row2.addView(stop, LinearLayout.LayoutParams(0, 55, 1f))
 
+        panel.addView(row2)
+
+        // My Recordings
         val recordings = Button(this)
-        recordings.text = "🎵 My Recordings"
+        recordings.text = "🎵 MY RECORDINGS"
 
-        layout.addView(recordings)
+        panel.addView(
+            recordings,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                50
+            )
+        )
 
-        setContentView(layout)
+        root.addView(
+            panel,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        setContentView(root)
     }
 
     private fun requestCapturePermission() {
