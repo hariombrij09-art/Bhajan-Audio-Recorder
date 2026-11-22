@@ -192,6 +192,7 @@ class MainActivity : ComponentActivity() {
         timerText.setPadding(4, 6, 4, 6)
 
         panel.addView(timerText)
+        timerText.visibility = View.VISIBLE
 
         val buttonHeight = (48 * resources.displayMetrics.density).toInt()
         // First Row
