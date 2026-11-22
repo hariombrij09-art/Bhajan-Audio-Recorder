@@ -16,6 +16,9 @@ import android.webkit.CookieManager
 import android.widget.*
 import android.graphics.Color
 import androidx.activity.result.contract.ActivityResultContracts
+import android.provider.MediaStore
+import android.content.ContentUris
+import android.app.AlertDialog
 
 class MainActivity : ComponentActivity() {
 
@@ -172,6 +175,9 @@ class MainActivity : ComponentActivity() {
         // My Recordings
         val recordings = Button(this)
         recordings.text = "🎵 MY RECORDINGS"
+        recordings.setOnClickListener {
+            showRecordings()
+        }
 
         panel.addView(
             recordings,
@@ -202,5 +208,79 @@ class MainActivity : ComponentActivity() {
         val intent = Intent(this, RecordingService::class.java)
         intent.action = action
         startService(intent)
+    }
+
+    private fun showRecordings() {
+
+        val names = ArrayList<String>()
+        val ids = ArrayList<Long>()
+
+        val projection = arrayOf(
+            MediaStore.Audio.Media._ID,
+            MediaStore.Audio.Media.DISPLAY_NAME
+        )
+
+        val selection =
+            "${MediaStore.MediaColumns.RELATIVE_PATH} = ?"
+
+        val selectionArgs = arrayOf(
+            "Music/Bhajan Audio Recorder/"
+        )
+
+        val cursor = contentResolver.query(
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+            projection,
+            selection,
+            selectionArgs,
+            "${MediaStore.MediaColumns.DATE_ADDED} DESC"
+        )
+
+        cursor?.use {
+            while (it.moveToNext()) {
+                ids.add(
+                    it.getLong(
+                        it.getColumnIndexOrThrow(
+                            MediaStore.Audio.Media._ID
+                        )
+                    )
+                )
+
+                names.add(
+                    it.getString(
+                        it.getColumnIndexOrThrow(
+                            MediaStore.Audio.Media.DISPLAY_NAME
+                        )
+                    )
+                )
+            }
+        }
+
+        if (names.isEmpty()) {
+            Toast.makeText(
+                this,
+                "अभी कोई रिकॉर्डिंग उपलब्ध नहीं है",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("मेरी रिकॉर्डिंग")
+            .setItems(names.toTypedArray()) { _, position ->
+
+                val uri = ContentUris.withAppendedId(
+                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    ids[position]
+                )
+
+                val intent = Intent(Intent.ACTION_VIEW)
+                intent.setDataAndType(uri, "audio/*")
+                
+intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+            startActivity(intent)
+        }
+        .setNegativeButton("बंद करें", null)
+        .show()
     }
 }
