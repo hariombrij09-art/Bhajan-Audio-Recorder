@@ -22,6 +22,8 @@ class RecordingService : Service() {
         const val ACTION_PAUSE = "PAUSE_RECORDING"
         const val ACTION_RESUME = "RESUME_RECORDING"
         const val ACTION_STOP = "STOP_RECORDING"
+        const val ACTION_RECORDING_READY = "RECORDING_READY"
+        const val EXTRA_TEMP_FILE = "temp_file"
 
         const val EXTRA_RESULT_CODE = "result_code"
         const val EXTRA_RESULT_DATA = "result_data"
@@ -216,35 +218,15 @@ class RecordingService : Service() {
         val tempFile = outputFile
 
         if (tempFile != null && tempFile.exists()) {
-            val values = ContentValues().apply {
-                put(MediaStore.Audio.Media.DISPLAY_NAME, tempFile.name)
-                put(MediaStore.Audio.Media.MIME_TYPE, "audio/wav")
-                put(
-                    MediaStore.Audio.Media.RELATIVE_PATH,
-                    Environment.DIRECTORY_MUSIC + "/Bhajan Audio Recorder"
-                )
-                put(MediaStore.Audio.Media.IS_PENDING, 1)
-            }
 
-            val uri = contentResolver.insert(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                values
+            val readyIntent = Intent(ACTION_RECORDING_READY)
+
+            readyIntent.putExtra(
+                EXTRA_TEMP_FILE,
+                tempFile.absolutePath
             )
 
-            if (uri != null) {
-                contentResolver.openOutputStream(uri)?.use { destination ->
-                    FileInputStream(tempFile).use { source ->
-                        source.copyTo(destination)
-                    }
-                }
-
-                val completedValues = ContentValues().apply {
-                    put(MediaStore.Audio.Media.IS_PENDING, 0)
-                }
-
-                contentResolver.update(uri, completedValues, null, null)
-                tempFile.delete()
-            }
+            sendBroadcast(readyIntent)
         }
 
         outputFile = null
