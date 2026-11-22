@@ -19,11 +19,42 @@ import androidx.activity.result.contract.ActivityResultContracts
 import android.provider.MediaStore
 import android.content.ContentUris
 import android.app.AlertDialog
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
 
 class MainActivity : ComponentActivity() {
 
     private lateinit var projectionManager: MediaProjectionManager
     private lateinit var status: TextView
+    private lateinit var timerText: TextView
+    private val timerHandler = Handler(Looper.getMainLooper())
+
+    private var recordingStartTime = 0L
+    private var elapsedBeforePause = 0L
+    private var timerRunning = false
+
+    private val timerRunnable = object : Runnable {
+        override fun run() {
+            if (timerRunning) {
+                val elapsed = elapsedBeforePause +
+                    SystemClock.elapsedRealtime() - recordingStartTime
+
+                val totalSeconds = elapsed / 1000
+                val hours = totalSeconds / 3600
+                val minutes = (totalSeconds % 3600) / 60
+                val seconds = totalSeconds % 60
+
+                timerText.text = String.format(
+                    Locale.getDefault(),
+                    "⏱ %02d:%02d:%02d",
+                    hours, minutes, seconds
+                )
+
+                timerHandler.postDelayed(this, 1000)
+            }
+        }
+    }
 
     private val permissionLauncher =
         registerForActivityResult(
@@ -65,6 +96,11 @@ class MainActivity : ComponentActivity() {
                 }
 
                 status.text = "● Recording Started"
+                elapsedBeforePause = 0L
+                recordingStartTime = SystemClock.elapsedRealtime()
+                timerRunning = true
+                timerHandler.removeCallbacks(timerRunnable)
+                timerHandler.post(timerRunnable)
             }
         }
 
@@ -116,6 +152,14 @@ class MainActivity : ComponentActivity() {
         status.gravity = Gravity.CENTER
 
         panel.addView(status)
+        timerText = TextView(this)
+        timerText.text = "⏱ 00:00:00"
+        timerText.textSize = 20f
+        timerText.setTextColor(Color.BLACK)
+        timerText.gravity = Gravity.CENTER
+        timerText.setPadding(4, 6, 4, 6)
+
+        panel.addView(timerText)
 
         val buttonHeight = (48 * resources.displayMetrics.density).toInt()
         // First Row
