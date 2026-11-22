@@ -201,45 +201,64 @@ class RecordingService : Service() {
     }
 
     private fun stopRecording() {
-    recording = false
 
-    try {
-        recordingThread?.join(1000)
+        recording = false
 
-        recorder?.stop()
-        recorder?.release()
-        recorder = null
+        try {
+            // पहले AudioRecord को रोकें
+            try {
+                recorder?.stop()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
 
-        output?.seek(0)
-        writeWavHeader(output, totalBytes)
-        output?.close()
-        output = null
+            // Recording thread बंद होने दें
+            try {
+                recordingThread?.join(1500)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
 
-        val tempFile = outputFile
+            recorder?.release()
+            recorder = null
+            recordingThread = null
 
-        if (tempFile != null && tempFile.exists()) {
+            // WAV फाइल का Header लिखें
+            output?.let {
+                it.seek(0)
+                writeWavHeader(it, totalBytes)
+                it.close()
+            }
 
-            val readyIntent = Intent(ACTION_RECORDING_READY)
+            output = null
 
-            readyIntent.putExtra(
-                EXTRA_TEMP_FILE,
-                tempFile.absolutePath
-            )
+            // तैयार फाइल की जानकारी MainActivity को भेजें
+            val tempFile = outputFile
 
-            sendBroadcast(readyIntent)
+            if (tempFile != null && tempFile.exists()) {
+
+                val readyIntent = Intent(ACTION_RECORDING_READY)
+
+                readyIntent.putExtra(
+                    EXTRA_TEMP_FILE,
+                    tempFile.absolutePath
+                )
+
+                sendBroadcast(readyIntent)
+            }
+
+            outputFile = null
+
+            projection?.stop()
+            projection = null
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+
+        } finally {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
         }
-
-        outputFile = null
-
-        projection?.stop()
-        projection = null
-
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
-
-    stopForeground(STOP_FOREGROUND_REMOVE)
-    stopSelf()
     }
         private fun writeWavHeader(
         file: RandomAccessFile?,
