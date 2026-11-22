@@ -186,6 +186,13 @@ class MainActivity : ComponentActivity() {
         pause.setOnClickListener {
             sendAction(RecordingService.ACTION_PAUSE)
             status.text = "⏸ Recording Paused"
+            if (timerRunning) {
+                elapsedBeforePause +=
+                    SystemClock.elapsedRealtime() - recordingStartTime
+
+                timerRunning = false
+                timerHandler.removeCallbacks(timerRunnable)
+            }
         }
 
         row1.addView(record, LinearLayout.LayoutParams(0, buttonHeight, 1f))
@@ -202,6 +209,10 @@ class MainActivity : ComponentActivity() {
         resume.setOnClickListener {
             sendAction(RecordingService.ACTION_RESUME)
             status.text = "● Recording Resumed"
+            recordingStartTime = SystemClock.elapsedRealtime()
+            timerRunning = true
+            timerHandler.removeCallbacks(timerRunnable)
+            timerHandler.post(timerRunnable)
         }
 
         val stop = Button(this)
@@ -209,6 +220,8 @@ class MainActivity : ComponentActivity() {
         stop.setOnClickListener {
             sendAction(RecordingService.ACTION_STOP)
             status.text = "■ Recording Stopped"
+            timerRunning = false
+            timerHandler.removeCallbacks(timerRunnable)
         }
 
         row2.addView(resume, LinearLayout.LayoutParams(0, buttonHeight, 1f))
