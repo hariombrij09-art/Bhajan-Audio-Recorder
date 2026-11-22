@@ -22,12 +22,38 @@ import android.app.AlertDialog
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.IntentFilter
+import androidx.core.content.ContextCompat
+import android.content.ContentValues
+import android.os.Environment
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
     private lateinit var projectionManager: MediaProjectionManager
     private lateinit var status: TextView
     private lateinit var timerText: TextView
+    private val recordingReceiver = object : BroadcastReceiver() {
+
+        override fun onReceive(context: Context?, intent: Intent?) {
+
+            if (intent?.action == RecordingService.ACTION_RECORDING_READY) {
+
+                val filePath = intent.getStringExtra(
+                    RecordingService.EXTRA_TEMP_FILE
+                )
+
+                if (filePath != null) {
+                    showSaveDialog(filePath)
+                }
+            }
+        }
+    }
     private val timerHandler = Handler(Looper.getMainLooper())
 
     private var recordingStartTime = 0L
@@ -106,6 +132,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ContextCompat.registerReceiver(
+            this,
+            recordingReceiver,
+            IntentFilter(RecordingService.ACTION_RECORDING_READY),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
 
         projectionManager =
             getSystemService(MEDIA_PROJECTION_SERVICE)
@@ -267,6 +299,99 @@ class MainActivity : ComponentActivity() {
         startService(intent)
     }
 
+    private fun showSaveDialog(filePath: String) {
+
+    val input = EditText(this)
+    input.hint = "रिकॉर्डिंग का नाम लिखें"
+    input.setText(
+        "Bhajan_" + SimpleDateFormat(
+            "yyyyMMdd_HHmmss",
+            Locale.getDefault()
+        ).format(Date())
+    )
+
+    AlertDialog.Builder(this)
+        .setTitle("रिकॉर्डिंग सेव करें")
+        .setMessage("अपनी रिकॉर्डिंग का नाम लिखें")
+        .setView(input)
+        .setPositiveButton("SAVE") { _, _ ->
+
+            var fileName = input.text.toString().trim()
+
+            if (fileName.isEmpty()) {
+                fileName = "Bhajan_Recording"
+            }
+
+            if (!fileName.endsWith(".wav", true)) {
+                fileName += ".wav"
+            }
+
+            val sourceFile = File(filePath)
+
+            try {
+                val values = ContentValues().apply {
+                    put(MediaStore.Audio.Media.DISPLAY_NAME, fileName)
+                    put(MediaStore.Audio.Media.MIME_TYPE, "audio/wav")
+                    put(
+                        MediaStore.Audio.Media.RELATIVE_PATH,
+                        "Music/Bhajan Audio Recorder"
+                    )
+                    put(MediaStore.Audio.Media.IS_PENDING, 1)
+                }
+
+                val uri = contentResolver.insert(
+                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    values
+                )
+
+                if (uri != null) {
+                    contentResolver.openOutputStream(uri)?.use { destination ->
+                        sourceFile.inputStream().use { source ->
+                            source.copyTo(destination)
+                        }
+                    }
+
+                    val completedValues = ContentValues().apply {
+                        put(MediaStore.Audio.Media.IS_PENDING, 0)
+                    }
+
+                    contentResolver.update(
+                        uri,
+                        completedValues,
+                        null,
+                        null
+                    )
+
+                    sourceFile.delete()
+
+                    Toast.makeText(
+                        this,
+                        "रिकॉर्डिंग सफलतापूर्वक सेव हो गई",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                } else {
+                    Toast.makeText(
+                        this,
+                        "रिकॉर्डिंग सेव नहीं हो सकी",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+
+                Toast.makeText(
+                    this,
+                    "सेव करने में समस्या हुई",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+        .setNegativeButton("CANCEL", null)
+        .show()
+    }
+    
     private fun showRecordings() {
 
         val names = ArrayList<String>()
@@ -340,4 +465,9 @@ intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         .setNegativeButton("बंद करें", null)
         .show()
     }
+ override fun onDestroy() {
+     timerHandler.removeCallbacks(timerRunnable)
+     unregisterReceiver(recordingReceiver)
+     super.onDestroy()
+ }
 }
