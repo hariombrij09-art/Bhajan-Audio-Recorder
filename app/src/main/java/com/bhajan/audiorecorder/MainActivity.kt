@@ -392,79 +392,235 @@ class MainActivity : ComponentActivity() {
         .show()
     }
     
-    private fun showRecordings() {
+private fun showRecordings() {
 
-        val names = ArrayList<String>()
-        val ids = ArrayList<Long>()
+    val names = ArrayList<String>()
+    val ids = ArrayList<Long>()
 
-        val projection = arrayOf(
-            MediaStore.Audio.Media._ID,
-            MediaStore.Audio.Media.DISPLAY_NAME
-        )
+    val projection = arrayOf(
+        MediaStore.Audio.Media._ID,
+        MediaStore.Audio.Media.DISPLAY_NAME
+    )
 
-        val selection =
-            "${MediaStore.MediaColumns.RELATIVE_PATH} = ?"
+    val selection =
+        "${MediaStore.MediaColumns.RELATIVE_PATH} = ?"
 
-        val selectionArgs = arrayOf(
-            "Music/Bhajan Audio Recorder/"
-        )
+    val selectionArgs = arrayOf(
+        "Music/Bhajan Audio Recorder/"
+    )
 
-        val cursor = contentResolver.query(
+    val cursor = contentResolver.query(
+        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+        projection,
+        selection,
+        selectionArgs,
+        "${MediaStore.MediaColumns.DATE_ADDED} DESC"
+    )
+
+    cursor?.use {
+        while (it.moveToNext()) {
+            ids.add(
+                it.getLong(
+                    it.getColumnIndexOrThrow(
+                        MediaStore.Audio.Media._ID
+                    )
+                )
+            )
+
+            names.add(
+                it.getString(
+                    it.getColumnIndexOrThrow(
+                        MediaStore.Audio.Media.DISPLAY_NAME
+                    )
+                )
+            )
+        }
+    }
+
+    if (names.isEmpty()) {
+        Toast.makeText(
+            this,
+            "अभी कोई रिकॉर्डिंग उपलब्ध नहीं है",
+            Toast.LENGTH_LONG
+        ).show()
+        return
+    }
+
+    val scrollView = ScrollView(this)
+    val listLayout = LinearLayout(this)
+    listLayout.orientation = LinearLayout.VERTICAL
+    listLayout.setPadding(12, 8, 12, 8)
+
+    val dialog = AlertDialog.Builder(this)
+        .setTitle("मेरी रिकॉर्डिंग")
+        .setView(scrollView)
+        .setNegativeButton("बंद करें", null)
+        .create()
+
+    scrollView.addView(listLayout)
+
+    for (i in names.indices) {
+
+        val uri = ContentUris.withAppendedId(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            selection,
-            selectionArgs,
-            "${MediaStore.MediaColumns.DATE_ADDED} DESC"
+            ids[i]
         )
 
-        cursor?.use {
-            while (it.moveToNext()) {
-                ids.add(
-                    it.getLong(
-                        it.getColumnIndexOrThrow(
-                            MediaStore.Audio.Media._ID
-                        )
-                    )
-                )
+        val row = LinearLayout(this)
+        row.orientation = LinearLayout.VERTICAL
+        row.setPadding(4, 8, 4, 8)
 
-                names.add(
-                    it.getString(
-                        it.getColumnIndexOrThrow(
-                            MediaStore.Audio.Media.DISPLAY_NAME
-                        )
-                    )
+        val nameText = TextView(this)
+        nameText.text = names[i]
+        nameText.textSize = 16f
+        nameText.setTextColor(Color.BLACK)
+
+        row.addView(nameText)
+
+        val buttons = LinearLayout(this)
+        buttons.orientation = LinearLayout.HORIZONTAL
+
+        val play = Button(this)
+        play.text = "PLAY"
+
+        play.setOnClickListener {
+            try {
+                val intent = Intent(Intent.ACTION_VIEW)
+                intent.setDataAndType(uri, "audio/*")
+                intent.addFlags(
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
                 )
+                startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this,
+                    "ऑडियो चलाने वाला ऐप नहीं मिला",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
 
-        if (names.isEmpty()) {
-            Toast.makeText(
-                this,
-                "अभी कोई रिकॉर्डिंग उपलब्ध नहीं है",
-                Toast.LENGTH_LONG
-            ).show()
-            return
+        val rename = Button(this)
+        rename.text = "RENAME"
+
+        rename.setOnClickListener {
+
+            val input = EditText(this)
+            input.setText(names[i])
+
+            AlertDialog.Builder(this)
+                .setTitle("नाम बदलें")
+                .setView(input)
+                .setPositiveButton("SAVE") { _, _ ->
+
+                    var newName = input.text.toString().trim()
+
+                    if (newName.isNotEmpty()) {
+
+                        if (!newName.endsWith(".wav", true)) {
+                            newName += ".wav"
+                        }
+
+                        try {
+                            val values = ContentValues().apply {
+                                put(
+                                    MediaStore.Audio.Media.DISPLAY_NAME,
+                                    newName
+                                )
+                            }
+
+                            val updated = contentResolver.update(
+                                uri,
+                                values,
+                                null,
+                                null
+                            )
+
+                            if (updated > 0) {
+                                Toast.makeText(
+                                    this,
+                                    "नाम बदल गया",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+
+                                dialog.dismiss()
+                                showRecordings()
+                            }
+
+                        } catch (e: Exception) {
+                            Toast.makeText(
+                                this,
+                                "नाम बदलने में समस्या हुई",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
+                .setNegativeButton("CANCEL", null)
+                .show()
         }
 
-        AlertDialog.Builder(this)
-            .setTitle("मेरी रिकॉर्डिंग")
-            .setItems(names.toTypedArray()) { _, position ->
+        val delete = Button(this)
+        delete.text = "DELETE"
 
-                val uri = ContentUris.withAppendedId(
-                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                    ids[position]
-                )
+        delete.setOnClickListener {
 
-                val intent = Intent(Intent.ACTION_VIEW)
-                intent.setDataAndType(uri, "audio/*")
-                
-intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            AlertDialog.Builder(this)
+                .setTitle("रिकॉर्डिंग मिटाएँ?")
+                .setMessage(names[i] + " को मिटाना चाहते हैं?")
+                .setPositiveButton("DELETE") { _, _ ->
 
-            startActivity(intent)
+                    try {
+                        val deleted = contentResolver.delete(
+                            uri,
+                            null,
+                            null
+                        )
+
+                        if (deleted > 0) {
+                            Toast.makeText(
+                                this,
+                                "रिकॉर्डिंग मिटा दी गई",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            dialog.dismiss()
+                            showRecordings()
+                        }
+
+                    } catch (e: Exception) {
+                        Toast.makeText(
+                            this,
+                            "मिटाने में समस्या हुई",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+                .setNegativeButton("CANCEL", null)
+                .show()
         }
-        .setNegativeButton("बंद करें", null)
-        .show()
+
+        buttons.addView(play, LinearLayout.LayoutParams(0, 48, 1f))
+        buttons.addView(rename, LinearLayout.LayoutParams(0, 48, 1f))
+        buttons.addView(delete, LinearLayout.LayoutParams(0, 48, 1f))
+
+        row.addView(buttons)
+        listLayout.addView(row)
+
+        val divider = View(this)
+        divider.setBackgroundColor(Color.LTGRAY)
+
+        listLayout.addView(
+            divider,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                1
+            )
+        )
     }
+
+    dialog.show()
+}
  override fun onDestroy() {
      timerHandler.removeCallbacks(timerRunnable)
      unregisterReceiver(recordingReceiver)
