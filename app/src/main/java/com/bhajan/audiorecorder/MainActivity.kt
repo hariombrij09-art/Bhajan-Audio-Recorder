@@ -114,6 +114,7 @@ class MainActivity : ComponentActivity() {
 
         panel.addView(status)
 
+        val buttonHeight = (48 * resources.displayMetrics.density).toInt()
         // First Row
         val row1 = LinearLayout(this)
         row1.orientation = LinearLayout.HORIZONTAL
@@ -140,8 +141,8 @@ class MainActivity : ComponentActivity() {
             status.text = "⏸ Recording Paused"
         }
 
-        row1.addView(record, LinearLayout.LayoutParams(0, 52, 1f))
-        row1.addView(pause, LinearLayout.LayoutParams(0, 52, 1f))
+        row1.addView(record, LinearLayout.LayoutParams(0, buttonHeight, 1f))
+        row1.addView(pause, LinearLayout.LayoutParams(0, buttonHeight, 1f))
 
         panel.addView(row1)
 
@@ -163,9 +164,9 @@ class MainActivity : ComponentActivity() {
             status.text = "■ Recording Stopped"
         }
 
-        row2.addView(resume, LinearLayout.LayoutParams(0, 44, 1f))
-        row2.addView(stop, LinearLayout.LayoutParams(0, 44, 1f))
-
+        row2.addView(resume, LinearLayout.LayoutParams(0, buttonHeight, 1f))
+        row2.addView(stop, LinearLayout.LayoutParams(0, buttonHeight, 1f))
+        
         panel.addView(row2)
 
         // My Recordings
