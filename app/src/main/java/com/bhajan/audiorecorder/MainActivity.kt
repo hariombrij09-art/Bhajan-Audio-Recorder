@@ -177,7 +177,7 @@ class MainActivity : ComponentActivity() {
             recordings,
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                48
+                (48 * resources.displayMetrics.density).toInt()
             )
         )
 
