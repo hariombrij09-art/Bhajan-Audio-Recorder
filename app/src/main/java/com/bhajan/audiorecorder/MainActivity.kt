@@ -601,10 +601,10 @@ private fun showRecordings() {
                 .show()
         }
 
-        buttons.addView(play, LinearLayout.LayoutParams(0, (56 * resources.displayMetrics.density).toInt(), 1f)
-        buttons.addView(rename, LinearLayout.LayoutParams(0, (56 * resources.displayMetrics.density).toInt(), 1f)
-        buttons.addView(delete, LinearLayout.LayoutParams(0, (56 * resources.displayMetrics.density).toInt(), 1f)
-
+        buttons.addView(play, LinearLayout.LayoutParams(0, (56 * resources.displayMetrics.density).toInt(), 1f))
+        buttons.addView(rename, LinearLayout.LayoutParams(0, (56 * resources.displayMetrics.density).toInt(), 1f))
+        buttons.addView(delete, LinearLayout.LayoutParams(0, (56 * resources.displayMetrics.density).toInt(), 1f))
+        
         row.addView(buttons)
         listLayout.addView(row)
 
