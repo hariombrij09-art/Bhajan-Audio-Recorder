@@ -238,6 +238,7 @@ class RecordingService : Service() {
             if (tempFile != null && tempFile.exists()) {
 
                 val readyIntent = Intent(ACTION_RECORDING_READY)
+                readyIntent.setPackage(packageName)
 
                 readyIntent.putExtra(
                     EXTRA_TEMP_FILE,
