@@ -1,6 +1,6 @@
 package com.bhajan.audiorecorder
 
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.content.Intent
 import android.media.projection.MediaProjectionManager
 import android.os.Bundle
@@ -33,7 +33,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     private lateinit var projectionManager: MediaProjectionManager
     private lateinit var status: TextView
