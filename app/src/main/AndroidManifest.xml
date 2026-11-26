@@ -13,7 +13,7 @@
          android:allowBackup="true"
          android:icon="@drawable/logo"
          android:label="Bhajan Audio Recorder"
-         android:theme="@android:style/Theme.Material.Light.NoActionBar"
+         android:theme="@style/AppTheme"
          android:usesCleartextTraffic="false">
 
         <activity
