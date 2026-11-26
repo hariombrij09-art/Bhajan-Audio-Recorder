@@ -311,7 +311,7 @@ class MainActivity : ComponentActivity() {
         ).format(Date())
     )
 
-    AlertDialog.Builder(this)
+    val saveDialog = AlertDialog.Builder(this)
         .setTitle("रिकॉर्डिंग सेव करें")
         .setMessage("अपनी रिकॉर्डिंग का नाम लिखें")
         .setView(input)
@@ -390,7 +390,11 @@ class MainActivity : ComponentActivity() {
             }
         }
         .setNegativeButton("CANCEL", null)
-        .show()
+        .create()
+
+        saveDialog.setCancelable(false)
+        saveDialog.setCanceledOnTouchOutside(false)
+        saveDialog.show()
     }
     
 private fun showRecordings() {
@@ -566,7 +570,7 @@ private fun showRecordings() {
 
         delete.setOnClickListener {
 
-            AlertDialog.Builder(this)
+                AlertDialog.Builder(this)
                 .setTitle("रिकॉर्डिंग मिटाएँ?")
                 .setMessage(names[i] + " को मिटाना चाहते हैं?")
                 .setPositiveButton("DELETE") { _, _ ->
@@ -597,8 +601,8 @@ private fun showRecordings() {
                         ).show()
                     }
                 }
-                .setNegativeButton("CANCEL", null)
-                .show()
+                        .setNegativeButton("CANCEL", null)
+                        .show()
         }
 
         buttons.addView(play, LinearLayout.LayoutParams(0, (56 * resources.displayMetrics.density).toInt(), 1f))
