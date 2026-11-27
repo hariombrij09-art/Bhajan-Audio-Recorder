@@ -34,6 +34,11 @@ import java.util.Date
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
+    private fun getThemeColor(attribute: Int): Int {
+    val typedValue = android.util.TypedValue()
+    theme.resolveAttribute(attribute, typedValue, true)
+    return typedValue.data
+    }
 
     private lateinit var projectionManager: MediaProjectionManager
     private lateinit var status: TextView
@@ -145,7 +150,9 @@ class MainActivity : AppCompatActivity() {
 
         val root = LinearLayout(this)
         root.orientation = LinearLayout.VERTICAL
-        root.setBackgroundColor(Color.WHITE)
+        root.setBackgroundColor(
+            getThemeColor(android.R.attr.colorBackground)
+        )
 
         // YouTube WebView
         val webView = WebView(this)
@@ -175,19 +182,25 @@ class MainActivity : AppCompatActivity() {
         val panel = LinearLayout(this)
         panel.orientation = LinearLayout.VERTICAL
         panel.setPadding(4, 2, 4, 2)
-        panel.setBackgroundColor(Color.rgb(240, 240, 240))
+        panel.setBackgroundColor(
+            getThemeColor(android.R.attr.colorBackground)
+        )
 
         status = TextView(this)
         status.text = "● Ready to Record"
         status.textSize = 15f
-        status.setTextColor(Color.BLACK)
+        status.setTextColor(
+            getThemeColor(android.R.attr.textColorPrimary)
+        )
         status.gravity = Gravity.CENTER
 
         panel.addView(status)
         timerText = TextView(this)
         timerText.text = "⏱ 00:00:00"
         timerText.textSize = 20f
-        timerText.setTextColor(Color.BLACK)
+        timerText.setTextColor(
+            getThemeColor(android.R.attr.textColorPrimary)
+        )
         timerText.gravity = Gravity.CENTER
         timerText.setPadding(4, 6, 4, 6)
 
@@ -478,7 +491,9 @@ private fun showRecordings() {
         val nameText = TextView(this)
         nameText.text = names[i]
         nameText.textSize = 16f
-        nameText.setTextColor(Color.BLACK)
+        nameText.setTextColor(
+            getThemeColor(android.R.attr.textColorPrimary)
+        )
 
         row.addView(nameText)
 
