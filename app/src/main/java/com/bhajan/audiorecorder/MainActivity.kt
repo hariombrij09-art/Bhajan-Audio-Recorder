@@ -15,6 +15,7 @@ import android.webkit.WebChromeClient
 import android.webkit.CookieManager
 import android.widget.*
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import androidx.activity.result.contract.ActivityResultContracts
 import android.provider.MediaStore
 import android.content.ContentUris
@@ -38,6 +39,17 @@ class MainActivity : AppCompatActivity() {
     val typedValue = android.util.TypedValue()
     theme.resolveAttribute(attribute, typedValue, true)
     return typedValue.data
+}
+
+    private fun createRoundedBackground(
+        color: Int,
+        radius: Float
+    ): GradientDrawable {
+        return GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            setColor(color)
+            cornerRadius = radius * resources.displayMetrics.density
+        }
     }
 
     private lateinit var projectionManager: MediaProjectionManager
@@ -148,11 +160,47 @@ class MainActivity : AppCompatActivity() {
             getSystemService(MEDIA_PROJECTION_SERVICE)
                     as MediaProjectionManager
 
+        // Modern App Header
+        val header = LinearLayout(this)
+        header.orientation = LinearLayout.HORIZONTAL
+        header.gravity = Gravity.CENTER_VERTICAL
+        header.setPadding(16, 12, 16, 12)
+        header.setBackground(
+            createRoundedBackground(
+                getThemeColor(android.R.attr.colorBackgroundFloating),
+                16f
+            )
+        )
+
+        val logo = ImageView(this)
+        logo.setImageResource(R.drawable.logo1)
+        logo.layoutParams = LinearLayout.LayoutParams(
+            (48 * resources.displayMetrics.density).toInt(),
+            (48 * resources.displayMetrics.density).toInt()
+        )
+        header.addView(logo)
+
+        val appTitle = TextView(this)
+        appTitle.text = "Bhajan Audio Recorder"
+        appTitle.textSize = 20f
+        appTitle.setTypeface(null, android.graphics.Typeface.BOLD)
+        appTitle.setTextColor(
+            getThemeColor(android.R.attr.textColorPrimary)
+        )
+        appTitle.setPadding(12, 0, 0, 0)
+        header.addView(appTitle)
         val root = LinearLayout(this)
         root.orientation = LinearLayout.VERTICAL
         root.setBackgroundColor(
             getThemeColor(android.R.attr.colorBackground)
         )
+        root.addView(header)
+        val headerSpace = View(this)
+        headerSpace.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            (8 * resources.displayMetrics.density).toInt()
+        )
+        root.addView(headerSpace)
 
         // YouTube WebView
         val webView = WebView(this)
@@ -181,14 +229,20 @@ class MainActivity : AppCompatActivity() {
         // Recording Control Panel
         val panel = LinearLayout(this)
         panel.orientation = LinearLayout.VERTICAL
-        panel.setPadding(4, 2, 4, 2)
+        panel.setPadding(12, 12, 12, 12)
+        panel.background = createRoundedBackground(
+            getThemeColor(android.R.attr.colorBackgroundFloating),
+            20f
+        )
         panel.setBackgroundColor(
             getThemeColor(android.R.attr.colorBackground)
         )
 
         status = TextView(this)
         status.text = "● Ready to Record"
-        status.textSize = 15f
+        status.textSize = 16f
+        status.setTypeface(null, android.graphics.Typeface.BOLD)
+        status.setPadding(4, 8, 4, 8)
         status.setTextColor(
             getThemeColor(android.R.attr.textColorPrimary)
         )
@@ -197,7 +251,9 @@ class MainActivity : AppCompatActivity() {
         panel.addView(status)
         timerText = TextView(this)
         timerText.text = "⏱ 00:00:00"
-        timerText.textSize = 20f
+        timerText.textSize = 26f
+        timerText.setTypeface(null, android.graphics.Typeface.BOLD)
+        timerText.setPadding(4, 10, 4, 10)
         timerText.setTextColor(
             getThemeColor(android.R.attr.textColorPrimary)
         )
@@ -214,6 +270,13 @@ class MainActivity : AppCompatActivity() {
 
         val record = Button(this)
         record.text = "🔴 RECORD"
+        record.background = createRoundedBackground(
+            Color.rgb(220, 53, 69),
+            14f
+        )
+        record.setTextColor(Color.WHITE)
+        record.isAllCaps = false
+        record.elevation = 6f
         record.setOnClickListener {
             if (checkSelfPermission(
                     Manifest.permission.RECORD_AUDIO
@@ -229,6 +292,13 @@ class MainActivity : AppCompatActivity() {
 
         val pause = Button(this)
         pause.text = "⏸ PAUSE"
+        pause.background = createRoundedBackground(
+            Color.rgb(230, 160, 30),
+            14f
+        )
+        pause.setTextColor(Color.WHITE)
+        pause.isAllCaps = false
+        pause.elevation = 6f
         pause.setOnClickListener {
             sendAction(RecordingService.ACTION_PAUSE)
             status.text = "⏸ Recording Paused"
@@ -241,8 +311,13 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        row1.addView(record, LinearLayout.LayoutParams(0, buttonHeight, 1f))
-        row1.addView(pause, LinearLayout.LayoutParams(0, buttonHeight, 1f))
+        val buttonMargin = (5 * resources.displayMetrics.density).toInt()
+        row1.addView(record, LinearLayout.LayoutParams(0, buttonHeight, 1f).apply {
+            setMargins(0, 4, buttonMargin, 4)
+        })
+        row1.addView(pause, LinearLayout.LayoutParams(0, buttonHeight, 1f).apply {
+            setMargins(buttonMargin, 4, 0, 4)
+        })
 
         panel.addView(row1)
 
@@ -252,6 +327,13 @@ class MainActivity : AppCompatActivity() {
 
         val resume = Button(this)
         resume.text = "▶ RESUME"
+        resume.background = createRoundedBackground(
+            Color.rgb(32, 160, 110),
+            14f
+        )
+        resume.setTextColor(Color.WHITE)
+        resume.isAllCaps = false
+        resume.elevation = 6f
         resume.setOnClickListener {
             sendAction(RecordingService.ACTION_RESUME)
             status.text = "● Recording Resumed"
@@ -263,6 +345,13 @@ class MainActivity : AppCompatActivity() {
 
         val stop = Button(this)
         stop.text = "⏹ STOP"
+        stop.background = createRoundedBackground(
+            Color.rgb(70, 85, 110),
+            14f
+        )
+        stop.setTextColor(Color.WHITE)
+        stop.isAllCaps = false
+        stop.elevation = 6f
         stop.setOnClickListener {
             sendAction(RecordingService.ACTION_STOP)
             status.text = "■ Recording Stopped"
@@ -270,24 +359,38 @@ class MainActivity : AppCompatActivity() {
             timerHandler.removeCallbacks(timerRunnable)
         }
 
-        row2.addView(resume, LinearLayout.LayoutParams(0, buttonHeight, 1f))
-        row2.addView(stop, LinearLayout.LayoutParams(0, buttonHeight, 1f))
+        row2.addView(resume, LinearLayout.LayoutParams(0, buttonHeight, 1f).apply {
+            setMargins(0, 4, buttonMargin, 4)
+        })
+        row2.addView(stop, LinearLayout.LayoutParams(0, buttonHeight, 1f).apply {
+            setMargins(buttonMargin, 4, 0, 4)
+        })
         
         panel.addView(row2)
 
         // My Recordings
         val recordings = Button(this)
         recordings.text = "🎵 MY RECORDINGS"
+        recordings.background = createRoundedBackground(
+            Color.rgb(40, 115, 210),
+            14f
+        )
+        recordings.setTextColor(Color.WHITE)
+        recordings.isAllCaps = false
+        recordings.elevation = 6f
         recordings.setOnClickListener {
             showRecordings()
         }
 
+        val recordingsMargin = (5 * resources.displayMetrics.density).toInt()
         panel.addView(
             recordings,
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 (48 * resources.displayMetrics.density).toInt()
-            )
+            ).apply {
+                setMargins(0, recordingsMargin, 0, 0)
+            }
         )
 
         root.addView(
