@@ -180,19 +180,17 @@ class MainActivity : AppCompatActivity() {
         )
         header.addView(logo)
 
-        val appTitle = TextView(this)
-        appTitle.text = "Bhajan Audio Recorder"
-        appTitle.textSize = 20f
-        appTitle.setTypeface(null, android.graphics.Typeface.BOLD)
-        appTitle.setTextColor(
-            getThemeColor(android.R.attr.textColorPrimary)
-        )
-        appTitle.setPadding(12, 0, 0, 0)
-        header.addView(appTitle)
         val root = LinearLayout(this)
         root.orientation = LinearLayout.VERTICAL
         root.setBackgroundColor(
             getThemeColor(android.R.attr.colorBackground)
+        )
+        root.addView(
+            header,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
         )
         root.addView(header)
         val headerSpace = View(this)
@@ -229,7 +227,7 @@ class MainActivity : AppCompatActivity() {
         // Recording Control Panel
         val panel = LinearLayout(this)
         panel.orientation = LinearLayout.VERTICAL
-        panel.setPadding(12, 12, 12, 12)
+        panel.setPadding(8, 4, 8, 4)
         panel.background = createRoundedBackground(
             getThemeColor(android.R.attr.colorBackgroundFloating),
             20f
@@ -242,7 +240,7 @@ class MainActivity : AppCompatActivity() {
         status.text = "● Ready to Record"
         status.textSize = 16f
         status.setTypeface(null, android.graphics.Typeface.BOLD)
-        status.setPadding(4, 8, 4, 8)
+        status.setPadding(4, 0, 4, 0)
         status.setTextColor(
             getThemeColor(android.R.attr.textColorPrimary)
         )
@@ -258,7 +256,7 @@ class MainActivity : AppCompatActivity() {
             getThemeColor(android.R.attr.textColorPrimary)
         )
         timerText.gravity = Gravity.CENTER
-        timerText.setPadding(4, 6, 4, 6)
+        timerText.setPadding(4, 0, 4, 0)
 
         panel.addView(timerText)
         timerText.visibility = View.VISIBLE
